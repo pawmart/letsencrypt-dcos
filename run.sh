@@ -4,9 +4,8 @@ set -e
 # Wait to settle
 sleep 15
 
-# Get our SSL domains from the Marathon app label
-SSL_DOMAINS=$(curl -s ${MARATHON_URL}/v2/apps${MARATHON_APP_ID} | python -c 'import sys, json; print(json.load(sys.stdin)["app"]["labels"]["HAPROXY_0_VHOST"])')
-
+# Get our SSL domains from env variable
+SSL_DOMAINS=${HAPROXY_0_VHOST}
 
 IFS=',' read -ra ADDR <<< "$SSL_DOMAINS"
 DOMAIN_ARGS=""

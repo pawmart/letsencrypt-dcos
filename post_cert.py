@@ -6,14 +6,18 @@ import json
 import requests
 import time
 
-url = os.environ.get('MARATHON_URL')
+base_url = os.environ.get('MARATHON_URL')
+headers = {'Content-Type': 'application/json', 'Authorization': 'token=' + os.environ.get('MARATHON_AUTH_TOKEN')}
+
 marathon_lb_id = os.environ.get('MARATHON_LB_ID')
 marathon_lb_cert_env = \
     os.environ.get('MARATHON_LB_CERT_ENV', 'HAPROXY_SSL_CERT')
 
 print("Retrieving current marathon-lb cert")
 sys.stdout.flush()
-r = requests.get(url + '/v2/apps/' + marathon_lb_id)
+
+marathon_lb_url = base_url + '/v2/apps/' + marathon_lb_id
+r = requests.get(marathon_lb_url, headers=headers)
 mlb = r.json()
 env = mlb['app']['env']
 cert = ''
@@ -28,8 +32,7 @@ if cert != env.get(marathon_lb_cert_env, ''):
 
     print("Deploying marathon-lb with new cert")
     sys.stdout.flush()
-    headers = {'Content-Type': 'application/json'}
-    r = requests.put(url + '/v2/apps/' + marathon_lb_id,
+    r = requests.put(marathon_lb_url,
                      headers=headers,
                      data=json.dumps({
                          'id': marathon_lb_id,
@@ -43,7 +46,7 @@ if cert != env.get(marathon_lb_cert_env, ''):
         time.sleep(5)
         print("Waiting for deployment to complete")
         sys.stdout.flush()
-        r = requests.get(url + '/v2/deployments')
+        r = requests.get(base_url + '/v2/deployments', headers=headers)
         deployments = r.json()
         deployment_exists = False
         for deployment in deployments:
